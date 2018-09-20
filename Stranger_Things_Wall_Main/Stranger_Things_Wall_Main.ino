@@ -1,17 +1,19 @@
 #include <PS2Keyboard.h>
 
 #include <unordered_map>
+using namespace std;
 
 const int KeybDIn = 8;
 const int KeybCIn = 3;
 
 PS2Keyboard keyboard;
 
-const int MAX_BUFF_LENGTH = 20; // TODO
-char currentBuffer[MAX_BUFF_LENGTH];
-int currentIdx = 0; // current position in currentBuffer
+String currentBuffer = "";
 
 
+const int MAX_NUM_MSGS = 3;
+String storedMessages[MAX_NUM_MSGS];
+int currMsgIdx = 0;
 
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
@@ -22,6 +24,11 @@ const int LEDDIn = 5;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(50, LEDDIn, NEO_GRB + NEO_KHZ800);
 
+
+unordered_map<char, int>letterIdx({
+  {'a', 0},
+  {'b', 1},
+});
 
 
 void setup() {
@@ -39,24 +46,30 @@ void setup() {
     
     strip.begin();
     strip.show(); // Initialize all pixels to 'off'
-
+    Serial.println(letterIdx.at('a'));
 }
 
 void dispatchMessage()
 {
-    for (int i = 0; i < currentIdx; i++)
+    for (int i = 0; i < currentBuffer.length(); i++)
     {
-        char curr = currentBuffer[i];
+        char curr = currentBuffer.charAt(i);
         Serial.print(curr);
         // TODO dispatch `curr` to LEDs
     }
     Serial.println("  ");
 }
 
-void loop() {
+
+void storeMessage(String currMessage){
+    storedMessages[currMsgIdx] = currMessage;
+    currMsgIdx = (currMsgIdx + 1) % 3; // wrap back around
+}
+
+void keyboardRead(){
+  
    if (keyboard.available())
     {
-        //Serial.println("yeet");
         char typed = keyboard.read();
         Serial.println(typed);
         if (typed != -1)
@@ -64,22 +77,46 @@ void loop() {
             // new character to be typed
             if ('a' <= typed && typed <= 'z')
             {
-                currentBuffer[currentIdx] = typed;
-                currentIdx += 1;
+                currentBuffer += typed;
             }
             if ('A' <= typed && typed <= 'Z')
             {
-                currentBuffer[currentIdx] = typed + 'a' - 'A'; // convert to lowercase
-                currentIdx += 1;
+                currentBuffer += (typed + 'a' - 'A'); // convert to lowercase
             }
-            if (currentIdx == MAX_BUFF_LENGTH || typed == PS2_ENTER)
+            if ( typed == PS2_ENTER)
             {
                 dispatchMessage();
-                currentIdx = 0;
+                currentBuffer = "";
             }
         }
     } else {
         //Serial.println("Keyboard not available!");
+    }
+}
+
+
+bool randomFlash() {
+  if (random(10000) > 9999) {
+      int numLights = strip.numPixels();
+      int numToFlash = random(numLights/2, numLights);
+      
+      for (int i = 0; i < numToFlash; i++) {
+        int ledIdx = random(0, numLights); 
+        if (random(10) > 3) { // flash the light with a 70% probability so it looks more random
+          strip.setPixelColor(ledIdx, strip.Color(0, 0, 127)); // TODO choose color, currently blue
+        }
+      }
+      return true;
+    }
+    return false;
+}
+
+void showMessage();
+
+void loop() {
+    keyboardRead();
+    if(randomFlash()){
+      showMessage();
     }
     delay(30);
 }
