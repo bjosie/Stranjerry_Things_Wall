@@ -1,7 +1,9 @@
 #include <PS2Keyboard.h>
+#include <Adafruit_NeoPixel.h>
 
-#include <unordered_map>
-using namespace std;
+#ifdef __AVR__
+#include <avr/power.h>
+#endif
 
 const int KeybDIn = 8;
 const int KeybCIn = 3;
@@ -13,11 +15,6 @@ String currentBuffer = "";
 const int MAX_NUM_MSGS = 3;
 String storedMessages[MAX_NUM_MSGS];
 int currMsgIdx = 0;
-
-#include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-#include <avr/power.h>
-#endif
 
 const int LEDDIn = 5;
 
@@ -38,13 +35,14 @@ void setup()
 
     strip.begin();
     strip.show(); // Initialize all pixels to 'off'
+    dispatchMessage("banter");
 }
 
-void dispatchMessage()
+void dispatchMessage(String toSend)
 {
-    for (int i = 0; i < currentBuffer.length(); i++)
+    for (int i = 0; i < toSend.length(); i++)
     {
-        char curr = currentBuffer.charAt(i);
+        char curr = toSend.charAt(i);
         Serial.print(curr);
         int ledIdx = curr <= 'n' ? 49 - (curr);
         if (curr <= 'n')
@@ -56,6 +54,12 @@ void dispatchMessage()
             ledIdx = 2 * (curr - 'o'); // O to Z is 0 to 22
         }
         // TODO light up led at ledIdx
+        strip.setPixelColor(ledIdx, 0, 255, 0);
+        strip.show();
+
+        delay(500);
+
+        strip.setPixelColor(ledIdx, 0, 0, 0);
     }
     Serial.println("  ");
 }
@@ -86,7 +90,8 @@ void keyboardRead()
             }
             if (typed == PS2_ENTER)
             {
-                dispatchMessage();
+                dispatchMessage(currentMessage);
+                storeMessage();
                 currentBuffer = "";
             }
         }
@@ -117,7 +122,12 @@ bool randomFlash()
     return false;
 }
 
-void showMessage();
+void showMessage()
+{
+    int msgToShowIdx = random(0, MAX_NUM_MSGS);
+    String msgToShow = storedMessages[msgToShowIdx];
+    dispatchMessage(msgToShow);
+}
 
 void loop()
 {
