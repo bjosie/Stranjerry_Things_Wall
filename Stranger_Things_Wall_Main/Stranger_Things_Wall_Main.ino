@@ -35,7 +35,8 @@ void setup()
 
     strip.begin();
     strip.show(); // Initialize all pixels to 'off'
-    dispatchMessage("banter");
+    randomFlash();
+    dispatchMessage("ligma");
 }
 
 void dispatchMessage(String toSend)
@@ -44,7 +45,7 @@ void dispatchMessage(String toSend)
     {
         char curr = toSend.charAt(i);
         Serial.print(curr);
-        int ledIdx = curr <= 'n' ? 49 - (curr);
+        int ledIdx;
         if (curr <= 'n')
         {
             ledIdx = 49 - 2 * (curr - 'a'); // A to N is 49 to 23, 2 at a time
@@ -54,14 +55,22 @@ void dispatchMessage(String toSend)
             ledIdx = 2 * (curr - 'o'); // O to Z is 0 to 22
         }
         // TODO light up led at ledIdx
-        strip.setPixelColor(ledIdx, 0, 255, 0);
-        strip.show();
-
-        delay(500);
-
-        strip.setPixelColor(ledIdx, 0, 0, 0);
+        flashLED(ledIdx);
     }
     Serial.println("  ");
+}
+
+void flashLED(int pixel){
+  for (int idx = 0; idx < 256; idx++){
+    strip.setPixelColor(pixel, 0, idx, 0);
+    strip.show();
+    delay(2);
+  }
+  for (int idx = 255; idx >= 0; idx--){
+    strip.setPixelColor(pixel, 0, idx, 0);
+    strip.show();
+    delay(2);
+  }
 }
 
 void storeMessage(String currMessage)
@@ -90,8 +99,8 @@ void keyboardRead()
             }
             if (typed == PS2_ENTER)
             {
-                dispatchMessage(currentMessage);
-                storeMessage();
+                dispatchMessage(currentBuffer);
+                storeMessage(currentBuffer);
                 currentBuffer = "";
             }
         }
@@ -104,7 +113,7 @@ void keyboardRead()
 
 bool randomFlash()
 {
-    if (random(10000) > 9999)
+    if (random(10000) > 0)
     {
         int numLights = strip.numPixels();
         int numToFlash = random(numLights / 2, numLights);
@@ -114,7 +123,10 @@ bool randomFlash()
             int ledIdx = random(0, numLights);
             if (random(10) > 3)
             {                                                        // flash the light with a 70% probability so it looks more random
-                strip.setPixelColor(ledIdx, strip.Color(0, 0, 127)); // TODO choose color, currently blue
+                strip.setPixelColor(ledIdx, 0, 0, 127); // TODO choose color, currently blue
+                strip.show();
+                delay(random(30));
+                strip.setPixelColor(ledIdx, 0, 0, 0);
             }
         }
         return true;
@@ -131,10 +143,10 @@ void showMessage()
 
 void loop()
 {
-    keyboardRead();
-    if (randomFlash())
-    {
-        showMessage();
-    }
-    delay(30);
+//    keyboardRead();
+//    if (randomFlash())
+//    {
+//        showMessage();
+//    }
+//    delay(30);
 }
