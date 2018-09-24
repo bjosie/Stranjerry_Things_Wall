@@ -7,7 +7,7 @@ PS2Keyboard keyboard;
 
 const int MAX_BUFF_LENGTH = 100; // TODO
 char currentBuffer[MAX_BUFF_LENGTH];
-char currentIdx = 0; // current position in currentBuffer
+int currentIdx = 0; // current position in currentBuffer
 
 void setup()
 {
@@ -22,6 +22,8 @@ void dispatchMessage()
     for (int i = 0; i < currentIdx; i++)
     {
         char curr = currentBuffer[i];
+        Serial.print(curr);
+        Serial.println();
         // TODO dispatch `curr` to LEDs
     }
 }
@@ -30,7 +32,9 @@ void loop()
 {
     if (keyboard.available())
     {
+        Serial.println("ligma");
         char typed = keyboard.read();
+        Serial.println(typed);
         if (typed != -1)
         {
             // new character to be typed
@@ -44,15 +48,17 @@ void loop()
                 currentBuffer[currentIdx] = typed + 'a' - 'A'; // convert to lowercase
                 currentIdx += 1;
             }
-            if (currentIdx == MAX_BUFF_LEN || typed == PS2_ENTER)
+            if (currentIdx == MAX_BUFF_LENGTH || typed == PS2_ENTER)
             {
-                dispatchMessage(currentBuffer);
+                dispatchMessage();
                 currentIdx = 0;
             }
         }
     }
     else
     {
-        Serial.println("Keyboard not available!");
+        //Serial.println("Keyboard not available!");
     }
+    delay(50);
 }
+

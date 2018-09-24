@@ -35,8 +35,9 @@ void setup()
 
     strip.begin();
     strip.show(); // Initialize all pixels to 'off'
-    randomFlash();
-    dispatchMessage("ligma");
+    storedMessages[0] = "stranjerrythings";
+    storedMessages[1] = "banter";
+    storedMessages[2] = "classic";
 }
 
 void dispatchMessage(String toSend)
@@ -60,7 +61,7 @@ void dispatchMessage(String toSend)
     Serial.println("  ");
 }
 
-void flashLED(int pixel, int maxGreen, int maxRed, int maxBlue)
+void flashLED(int pixel)
 {
     for (int idx = 0; idx < 256; idx++)
     {
@@ -87,25 +88,32 @@ void keyboardRead()
 
     if (keyboard.available())
     {
-        char typed = keyboard.read();
-        Serial.println(typed);
-        if (typed != -1)
-        {
-            // new character to be typed
-            if ('a' <= typed && typed <= 'z')
-            {
-                currentBuffer += typed;
-            }
-            if ('A' <= typed && typed <= 'Z')
-            {
-                currentBuffer += (typed + 'a' - 'A'); // convert to lowercase
-            }
-            if (typed == PS2_ENTER)
-            {
-                dispatchMessage(currentBuffer);
-                storeMessage(currentBuffer);
-                currentBuffer = "";
-            }
+        while (true) {
+          char typed = keyboard.read();
+          Serial.println(typed);
+          if (typed != -1)
+          {
+              // new character to be typed
+              if ('a' <= typed && typed <= 'z')
+              {
+                  currentBuffer += typed;
+              }
+              if ('A' <= typed && typed <= 'Z')
+              {
+                  currentBuffer += (typed + 'a' - 'A'); // convert to lowercase
+              }
+              if (typed == PS2_ENTER)
+              {
+                  dispatchMessage(currentBuffer);
+                  storeMessage(currentBuffer);
+                  currentBuffer = "";
+              }
+          } 
+          else
+          {
+            break;
+          }
+          }
         }
     }
     else
@@ -116,14 +124,14 @@ void keyboardRead()
 
 bool randomFlash()
 {
-    if (random(10000) > 0)
+    if (random(1000) > 500)
     {
-        for (int s = 0; i < 6) //  6ish seconds
+        for (int s = 0; s < 6; s++) //  6ish seconds
         {
             bool pixelsToLight[strip.numPixels()]; // whether a pixel will be lit up this time
             for (int i = 0; i < strip.numPixels(); i++)
             {
-                pixelsToLight[i] = random(10) < 6 // 60% chance
+                pixelsToLight[i] = random(10) < 6; // 60% chance
             }
             for (int i = 0; i < 256; i++)
             {
@@ -131,23 +139,23 @@ bool randomFlash()
                 {
                     if (pixelsToLight[j])
                     {
-                        strip.setColorPixel(j, i, i, i);
+                        strip.setPixelColor(j, i, i, i);
                     }
                 }
                 strip.show();
-                delay(2)
+                delay(2);
             }
-            for (int i = 256; i >= 0; i++)
+            for (int i = 256; i >= 0; i--)
             {
                 for (int j = 0; j < strip.numPixels(); j++)
                 {
                     if (pixelsToLight[j])
                     {
-                        strip.setColorPixel(j, i, i, i);
+                        strip.setPixelColor(j, i, i, i);
                     }
                 }
                 strip.show();
-                delay(2)
+                delay(2);
             }
         }
         return true;
@@ -234,6 +242,7 @@ void rainbow(uint8_t wait)
 
     for (j = 0; j < 256; j++)
     {
+      
         for (i = 0; i < strip.numPixels(); i++)
         {
             strip.setPixelColor(i, Wheel((i + j) & 255));
