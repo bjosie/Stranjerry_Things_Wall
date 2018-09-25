@@ -36,8 +36,8 @@ void setup()
     strip.begin();
     strip.show(); // Initialize all pixels to 'off'
     storedMessages[0] = "stranjerrythings";
-    storedMessages[1] = "banter";
-    storedMessages[2] = "classic";
+    storedMessages[1] = "yeet";
+    storedMessages[2] = "lmao";
 }
 
 void dispatchMessage(String toSend)
@@ -67,13 +67,13 @@ void flashLED(int pixel)
     {
         strip.setPixelColor(pixel, 0, idx, 0);
         strip.show();
-        delay(2);
+        delay(3);
     }
     for (int idx = 255; idx >= 0; idx--)
     {
         strip.setPixelColor(pixel, 0, idx, 0);
         strip.show();
-        delay(2);
+        delay(3);
     }
 }
 
@@ -90,7 +90,6 @@ void keyboardRead()
     {
         while (true) {
           char typed = keyboard.read();
-          Serial.println(typed);
           if (typed != -1)
           {
               // new character to be typed
@@ -104,15 +103,17 @@ void keyboardRead()
               }
               if (typed == PS2_ENTER)
               {
+                  flash();
                   dispatchMessage(currentBuffer);
                   storeMessage(currentBuffer);
                   currentBuffer = "";
+                  break;
               }
           } 
           else
           {
+            Serial.print("breaking");
             break;
-          }
           }
         }
     }
@@ -122,42 +123,35 @@ void keyboardRead()
     }
 }
 
+void flash() {
+  for (int s = 0; s < 20; s++) //  6ish seconds
+    {
+        bool pixelsToLight[strip.numPixels()]; // whether a pixel will be lit up this time
+        for (int i = 0; i < strip.numPixels(); i++)
+        {
+            pixelsToLight[i] = random(10) < 4; // 60% chance
+        }
+        for (int pixel = 0; pixel < strip.numPixels(); pixel++){
+          if (pixelsToLight[pixel]){
+            strip.setPixelColor(pixel, 255, 255, 255);
+          } else {
+            strip.setPixelColor(pixel, 0, 0, 0);
+          }
+          strip.show();
+        }
+      delay(50);
+        for (int pixel = 0; pixel < strip.numPixels(); pixel++){
+          strip.setPixelColor(pixel, 0, 0, 0);
+          strip.show();
+        }
+    }
+}
+
 bool randomFlash()
 {
-    if (random(1000) > 500)
+    if (random(1000) > 300)
     {
-        for (int s = 0; s < 6; s++) //  6ish seconds
-        {
-            bool pixelsToLight[strip.numPixels()]; // whether a pixel will be lit up this time
-            for (int i = 0; i < strip.numPixels(); i++)
-            {
-                pixelsToLight[i] = random(10) < 6; // 60% chance
-            }
-            for (int i = 0; i < 256; i++)
-            {
-                for (int j = 0; j < strip.numPixels(); j++)
-                {
-                    if (pixelsToLight[j])
-                    {
-                        strip.setPixelColor(j, i, i, i);
-                    }
-                }
-                strip.show();
-                delay(2);
-            }
-            for (int i = 256; i >= 0; i--)
-            {
-                for (int j = 0; j < strip.numPixels(); j++)
-                {
-                    if (pixelsToLight[j])
-                    {
-                        strip.setPixelColor(j, i, i, i);
-                    }
-                }
-                strip.show();
-                delay(2);
-            }
-        }
+        flash();
         return true;
     }
     return false;
@@ -172,7 +166,7 @@ void showMessage()
 
 void randomEffect()
 {
-    int choice = random(9);
+    int choice = 7;
 
     if (choice == 0)
     {
@@ -265,6 +259,8 @@ void rainbowCycle(uint8_t wait)
         }
         strip.show();
         delay(wait);
+        keyboardRead();
+        Serial.println("After reading");
     }
 }
 
